@@ -68,15 +68,14 @@ dependencies
            }
         }
         stage('Trivy FS Scan') {
-            steps {
-                sh 'trivy fs . > trivyfs.txt'
-            }
-        }
+                    steps {
+                        sh 'trivy fs --format table -o trivyfs.txt .'
+                    }
+                }
         stage('Docker Build & Push') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 
-'docker') {
+                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
                         sh ''' 
                         echo "Building Docker image..."
                         docker build --no-cache -t sai798187/bms:latest -f 
