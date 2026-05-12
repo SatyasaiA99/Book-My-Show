@@ -22,7 +22,7 @@ userRemoteConfigs: [[url: 'https://github.com/sai798187/Book-My-Show.git']])
         }
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonar-server') {
+                withSonarQubeEnv('sq') {
                     sh ''' 
                     $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=BMS \
                     -Dsonar.projectKey=BMS 
