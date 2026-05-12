@@ -78,8 +78,7 @@ dependencies
                     withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
                         sh ''' 
                         echo "Building Docker image..."
-                        docker build --no-cache -t sai798187/bms:latest -f 
-bookmyshow-app/Dockerfile bookmyshow-app
+                        docker build --no-cache -t sai798187/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app
                         echo "Pushing Docker image to registry..."
                         docker push sai798187/bms:latest
                         '''
@@ -94,8 +93,7 @@ bookmyshow-app/Dockerfile bookmyshow-app
                 docker stop bms || true
                 docker rm bms || true
                 echo "Running new container on port 3000..."
-                docker run -d --restart=always --name bms -p 3000:3000 
-sai798187/bms:latest
+                docker run -d --restart=always --name bms -p 3000:3000 sai798187/bms:latest
                 echo "Checking running containers..."
                 docker ps -a
                 echo "Fetching logs..."
@@ -106,10 +104,7 @@ sai798187/bms:latest
         }
     }
     post {
-        always {
-        }
-    }
-}                                                    
+        always {                                                 
                   emailext(
                     attachLog: true,
                     subject: "Build ${currentBuild.result}",
@@ -119,3 +114,7 @@ sai798187/bms:latest
                     to: 'sai798187@gmail.com',
                     attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
                       )
+                }
+            }
+        }
+        
