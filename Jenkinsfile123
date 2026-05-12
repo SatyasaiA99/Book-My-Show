@@ -6,7 +6,8 @@ pipeline {
         nodejs 'node23'
     }
     environment {
-        SCANNER_HOME = tool 'sonar-scanner'
+        SCANNER_HOME = tool 'sq'
+        
     }
     stages {
         stage('Clean Workspace') {
@@ -16,7 +17,7 @@ pipeline {
         }
         stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/KastroVKiran/Book-My-Show.git'
+                git branch: 'main', url: 'https://github.com/sai798187/Book-My-Show.git'
                 sh 'ls -la'  // Verify files after checkout
             }
         }
@@ -69,10 +70,10 @@ pipeline {
                     withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
                         sh ''' 
                         echo "Building Docker image..."
-                        docker build --no-cache -t kastrov/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app
+                        docker build --no-cache -t sai798187/bookmyshow:latest -f bookmyshow-app/Dockerfile bookmyshow-app
 
                         echo "Pushing Docker image to registry..."
-                        docker push kastrov/bms:latest
+                        docker push sai798187/bookmyshow:latest
                         '''
                     }
                 }
