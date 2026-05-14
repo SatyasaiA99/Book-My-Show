@@ -34,7 +34,7 @@ userRemoteConfigs: [[url: 'https://github.com/SatyasaiA99/Book-My-Show.git']])
             steps {
                 script {
                     waitForQualityGate abortPipeline: false, credentialsId: 
-'Sonar-token'
+'sq'
                 }
             }
         }
@@ -111,7 +111,7 @@ dependencies
                     body: "Project: ${env.JOB_NAME}<br/>" +
                           "Build Number: ${env.BUILD_NUMBER}<br/>" +
                           "URL: ${env.BUILD_URL}<br/>",
-                    to: 'sai798187@gmail.com',
+                    to: 'satyaankam69@gmail.com',
                     attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
                       )
                 }
