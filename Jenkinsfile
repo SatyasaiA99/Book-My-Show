@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        jdk 'jdk17'
+        jdk 'jdk21'
         nodejs 'node23'
     }
     environment {
@@ -16,7 +16,7 @@ pipeline {
         stage('Checkout from Git') {
             steps {
                checkout scmGit(branches: [[name: '*/main']], extensions: [], 
-userRemoteConfigs: [[url: 'https://github.com/sai798187/Book-My-Show.git']])
+userRemoteConfigs: [[url: 'https://github.com/SatyasaiA99/Book-My-Show.git']])
                 sh 'ls -la'  // Verify files after checkout
             }
         }
@@ -75,12 +75,12 @@ dependencies
         stage('Docker Build & Push') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+                    withDockerRegistry(credentialsId: 'Dockerhub', toolName: 'docker') {
                         sh ''' 
                         echo "Building Docker image..."
-                        docker build --no-cache -t sai798187/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app
+                        docker build --no-cache -t satyasaia99/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app
                         echo "Pushing Docker image to registry..."
-                        docker push sai798187/bms:latest
+                        docker push satyasaia99/bms:latest
                         '''
                     }
                 }
@@ -93,7 +93,7 @@ dependencies
                 docker stop bms || true
                 docker rm bms || true
                 echo "Running new container on port 3000..."
-                docker run -d --restart=always --name bms -p 3000:3000 sai798187/bms:latest
+                docker run -d --restart=always --name bms -p 3000:3000 satyasaia99/bms:latest
                 echo "Checking running containers..."
                 docker ps -a
                 echo "Fetching logs..."
