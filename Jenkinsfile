@@ -92,17 +92,14 @@ pipeline {
         }
     }
     post {
-    always {
-        emailext(
-            attachLog: true,
-            subject: "${currentBuild.result}",
-            body: "Project: ${env.JOB_NAME}<br/>" +
-                  "Build Number: ${env.BUILD_NUMBER}<br/>" +
-                  "URL: ${env.BUILD_URL}<br/>",
-            to: 'satyaankam69@gmail.com,sai798187@gmail.com',
-            cc: 'saiankam69@gmail.com',
-            attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
-        )
+        always {
+            emailext attachLog: true,
+                subject: "'${currentBuild.result}'",
+                body: "Project: ${env.JOB_NAME}<br/>" +
+                      "Build Number: ${env.BUILD_NUMBER}<br/>" +
+                      "URL: ${env.BUILD_URL}<br/>",
+                to: 'satyaankam69@gmail.com,saiankam69@gmail.com',
+                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+        }
     }
-}
 } 
