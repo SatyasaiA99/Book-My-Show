@@ -1,34 +1,48 @@
 pipeline {
     agent any
+
     tools {
         jdk 'jdk21'
         nodejs 'node23'
     }
+
     environment {
         SCANNER_HOME = tool 'sq'
+        IMAGE_NAME = 'satyasaia99/bms:latest'
     }
+
     stages {
+
         stage('Clean Workspace') {
             steps {
                 cleanWs()
             }
         }
+
         stage('Checkout from Git') {
             steps {
-               checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/SatyasaiA99/Book-My-Show.git']])
-                sh 'ls -la'  // Verify files after checkout
+                checkout scmGit(
+                    branches: [[name: '*/main']],
+                    extensions: [],
+                    userRemoteConfigs: [[url: 'https://github.com/SatyasaiA99/Book-My-Show.git']]
+                )
+
+                sh 'ls -la'
             }
         }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sq') {
-                    sh ''' 
-                    $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=BMS \
-                    -Dsonar.projectKey=BMS 
-                    '''
+                    sh """
+                    ${SCANNER_HOME}/bin/sonar-scanner \
+                    -Dsonar.projectName=BMS \
+                    -Dsonar.projectKey=BMS
+                    """
                 }
             }
         }
+
         stage('Quality Gate') {
             steps {
                 script {
@@ -36,76 +50,100 @@ pipeline {
                 }
             }
         }
+
         stage('Install Dependencies') {
             steps {
                 sh '''
                 cd bookmyshow-app
-                ls -la  # Verify package.json exists
-                if [ -f package.json ]; then
-                    rm -rf node_modules package-lock.json  # Remove old dependencies
-                    npm install  # Install fresh dependencies
+
+                if [ -f package-lock.json ]; then
+                    npm ci
                 else
-                    echo "Error: package.json not found in bookmyshow-app!"
-                    exit 1
+                    npm install
                 fi
                 '''
             }
         }
-        stage('OWASP FS Scan') {
+
+        stage('Trivy File System Scan') {
             steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                sh '''
+                trivy fs --scanners vuln . > trivyfs.txt
+                '''
             }
         }
-        stage('Trivy FS Scan') {
+
+        stage('Docker Build') {
             steps {
-                sh 'trivy fs . > trivyfs.txt'
+                script {
+                    sh '''
+                    docker build -t $IMAGE_NAME \
+                    -f bookmyshow-app/Dockerfile \
+                    bookmyshow-app
+                    '''
+                }
             }
         }
-        stage('Docker Build & Push') {
+
+        stage('Trivy Docker Image Scan') {
+            steps {
+                sh '''
+                trivy image $IMAGE_NAME > trivyimage.txt
+                '''
+            }
+        }
+
+        stage('Docker Push') {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'Dockerhub', toolName: 'docker') {
-                        sh ''' 
-                        echo "Building Docker image..."
-                        docker build --no-cache -t satyasaia99/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app
 
-                        echo "Pushing Docker image to registry..."
-                        docker push satyasaia99/bms:latest
+                        sh '''
+                        docker push $IMAGE_NAME
                         '''
                     }
                 }
             }
         }
-        stage('Deploy to Container') {
+
+        stage('Deploy Container') {
             steps {
-                sh ''' 
-                echo "Stopping and removing old container..."
+                sh '''
+                echo "Stopping old container..."
                 docker stop bms || true
                 docker rm bms || true
 
-                echo "Running new container on port 3000..."
-                docker run -d --restart=always --name bms -p 3000:3000 satyasaia99/bms:latest
+                echo "Running new container..."
+                docker run -d \
+                --restart=always \
+                --name bms \
+                -p 3000:3000 \
+                $IMAGE_NAME
 
-                echo "Checking running containers..."
+                echo "Running Containers:"
                 docker ps -a
 
-                echo "Fetching logs..."
-                sleep 5  # Give time for the app to start
+                echo "Application Logs:"
+                sleep 10
                 docker logs bms
                 '''
             }
         }
     }
+
     post {
         always {
-            emailext attachLog: true,
-                subject: "'${currentBuild.result}'",
-                body: "Project: ${env.JOB_NAME}<br/>" +
-                      "Build Number: ${env.BUILD_NUMBER}<br/>" +
-                      "URL: ${env.BUILD_URL}<br/>",
+            emailext(
+                attachLog: true,
+                subject: "${currentBuild.result}: Job ${env.JOB_NAME}",
+                body: """
+                Project: ${env.JOB_NAME}<br/>
+                Build Number: ${env.BUILD_NUMBER}<br/>
+                Build URL: ${env.BUILD_URL}<br/>
+                """,
                 to: 'satyaankam69@gmail.com',
                 attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+            )
         }
     }
-} 
+}
