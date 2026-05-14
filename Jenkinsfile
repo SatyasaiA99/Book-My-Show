@@ -79,7 +79,7 @@ pipeline {
                 docker rm bms || true
 
                 echo "Running new container on port 3000..."
-                docker run -d --restart=always --name bms -p 3000:3000 satyasaia99/bms:latest
+                docker run -d --restart=always --name bms -p 3002:3000 satyasaia99/bms:latest
 
                 echo "Checking running containers..."
                 docker ps -a
